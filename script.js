@@ -1,34 +1,50 @@
+const apiUrl = "https://script.google.com/macros/s/AKfycbws_IUGmxy2KxSoY_kMsxRDa3tGfwS758lVfZtMAW0lTF7waTvAnnvRAI_pwNs2hrZb1w/exec";
 
-async function generateLink() {
-  const orderId = document.getElementById("orderId").value;
-  const amount = document.getElementById("amount").value;
-  const email = document.getElementById("email").value;
-  const phone = document.getElementById("phone").value;
+function generateLink() {
+  const orderId = document.getElementById("orderId").value.trim();
+  const amount = document.getElementById("amount").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
 
-  const paymentLinkField = document.getElementById("paymentLink");
-  const statusField = document.getElementById("status");
+  const paymentLinkInput = document.getElementById("paymentLink");
+  const statusInput = document.getElementById("status");
 
-  paymentLinkField.value = "";
-  statusField.value = "";
+  // Очистка полей перед запросом
+  paymentLinkInput.value = "";
+  statusInput.value = "Загрузка...";
 
-  try {
-    const response = await fetch("https://script.google.com/macros/s/AKfycbyGotVgL_xLiFmBgh9RVhl49FdkMrHj3WZYWs02ZcsxNw1PX7geK7O63A6CKR4cqGqsTw/exec", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId, amount, email, phone })
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      paymentLinkField.value = result.link || "Ссылка не получена";
-      statusField.value = result.status || "Нет статуса";
-    } else {
-      paymentLinkField.value = "Ошибка при запросе";
-      statusField.value = result.error || "Неизвестная ошибка";
-    }
-  } catch (err) {
-    paymentLinkField.value = "Ошибка соединения";
-    statusField.value = err.message || "Failed to fetch";
+  if (!orderId || !amount || !email || !phone) {
+    alert("Пожалуйста, заполните все поля.");
+    statusInput.value = "";
+    return;
   }
+
+  const payload = {
+    orderId,
+    amount,
+    email,
+    phone
+  };
+
+  fetch(apiUrl, {
+    method: "POST",
+    mode: "no-cors",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+    .then((response) => {
+      statusInput.value = "Ожидание ответа...";
+      return response.json(); // Эта часть может не сработать при no-cors
+    })
+    .then((data) => {
+      paymentLinkInput.value = data.link || "Нет ссылки";
+      statusInput.value = data.status || "Нет статуса";
+    })
+    .catch((error) => {
+      console.error("Ошибка запроса:", error);
+      paymentLinkInput.value = "Ошибка соединения";
+      statusInput.value = "Не удалось отправить данные";
+    });
 }
