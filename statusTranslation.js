@@ -1,11 +1,9 @@
-
 function translateStatus(status) {
-    const translations = {
-        "STATUS_PAYMENT_PENDING": "Ожидает оплату",
-        "STATUS_PAYMENT_SUCCEEDED": "Оплачено",
-        "STATUS_PAYMENT_CANCELED": "Отменено",
-        "STATUS_PAYMENT_FAILED": "Ошибка оплаты",
-        "STATUS_PAYMENT_EXPIRED": "Истек срок действия ссылки"
-    };
-    return translations[status] || status;
+  const map = {
+    "STATUS_PAYMENT_PENDING": "Ожидает оплаты",
+    "STATUS_PAID": "Оплачено",
+    "STATUS_CANCELLED": "Отменено",
+    "STATUS_EXPIRED": "Истек срок оплаты",
+  };
+  return map[status] || status || "Неизвестно";
 }
