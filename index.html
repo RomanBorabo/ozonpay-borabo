@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Оплата через OzonPay — BORABO</title>
+  <script src="script.js" defer></script>
+  <script src="statusTranslation.js" defer></script>
+  <style>
+    body { font-family: sans-serif; background: #f5f8fa; padding: 2em; max-width: 600px; margin: auto; }
+    h2 { color: #222; }
+    label { font-weight: bold; margin-top: 1em; display: block; }
+    input, button {
+      font-size: 1em; padding: 0.5em; margin: 0.4em 0;
+      width: 100%; max-width: 100%; box-sizing: border-box;
+    }
+    button { background: #ff5e00; color: white; border: none; cursor: pointer; }
+    button:hover { background: #e14e00; }
+  </style>
+</head>
+<body>
+  <h2>Создание ссылки OzonPay</h2>
+  <label>Номер заказа: <input type="text" id="orderId" /></label>
+  <label>Сумма (₽): <input type="number" id="amount" /></label>
+  <label>Email клиента: <input type="email" id="email" /></label>
+  <label>Телефон клиента: <input type="text" id="phone" /></label>
+  <button onclick="generateLink()">Сгенерировать ссылку</button>
+  <label>Ссылка на оплату: <input type="text" id="paymentLink" readonly /></label>
+  <label>Статус: <input type="text" id="status" readonly /></label>
+</body>
+</html>
