@@ -27,13 +27,12 @@ function generateLink() {
   };
 
   fetch(apiUrl, {
-    method: "POST",
-    mode: "no-cors",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  })
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(payload)
+})
     .then((response) => {
       statusInput.value = "Ожидание ответа...";
       return response.json(); // Эта часть может не сработать при no-cors
