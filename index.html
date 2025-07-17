@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>OzonPay BORABO</title>
+  <style>
+    body { font-family: Arial; background: #f7f9fc; padding: 30px; }
+    h2 { color: #2c3e50; }
+    input { padding: 8px; width: 300px; margin-bottom: 10px; }
+    button { padding: 8px 15px; background: #0077ff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #005fd4; }
+    table { border-collapse: collapse; margin-top: 20px; width: 100%; max-width: 1000px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <h2>Создание ссылки OzonPay</h2>
+  <label>Номер заказа:<br><input type="text" id="orderNumber"></label><br>
+  <label>Сумма (₽):<br><input type="text" id="amount"></label><br>
+  <label>Email клиента:<br><input type="email" id="email"></label><br>
+  <label>Телефон клиента:<br><input type="text" id="phone"></label><br>
+  <button onclick="generateLink()">Сгенерировать ссылку</button><br>
+  <label>Ссылка на оплату:<br><input type="text" id="payLink" readonly></label><br>
+  <label>Статус:<br><input type="text" id="status" readonly></label><br>
+
+  <script>
+    async function generateLink() {
+      const orderNumber = document.getElementById('orderNumber').value;
+      const amountRub = document.getElementById('amount').value;
+      const email = document.getElementById('email').value;
+      const phone = document.getElementById('phone').value;
+
+      const accessKey = "a9185752-f481-4a18-820b-34ac0e440e59";
+      const secretKey = "Fxk9IRroeetDFfzZDg0oncsitxQITQN2";
+      const extId = "ext_" + Date.now();
+      const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
+      const currencyCode = "643";
+      const fiscalizationType = "FISCAL_TYPE_SINGLE";
+      const paymentAlgorithm = "PAY_ALGO_SMS";
+      const amountValue = Math.round(parseFloat(amountRub) * 100).toString();
+
+      const stringToSign = accessKey + expiresAt + extId + fiscalizationType + paymentAlgorithm + currencyCode + amountValue + secretKey;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(stringToSign);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const requestSign = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const payload = {
+        accessKey,
+        expiresAt,
+        extId,
+        amount: { currencyCode, value: amountValue },
+        enableFiscalization: true,
+        fiscalizationType,
+        fiscalizationPhone: phone,
+        items: [{
+          extId: 'item_' + extId,
+          name: 'Оплата заказа ' + orderNumber,
+          price: { currencyCode, value: amountValue },
+          quantity: 1,
+          vat: 'VAT_5'
+        }],
+        paymentAlgorithm,
+        successUrl: 'https://borabo.ru/payment-success',
+        failUrl: 'https://borabo.ru/payment-fail',
+        receiptEmail: email,
+        requestSign
+      };
+
+      const res = await fetch("https://payapi.ozon.ru/v1/createOrder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      if (result.order?.payLink) {
+        document.getElementById('payLink').value = result.order.payLink;
+        autoUpdateStatus(result.order.id);
+      } else {
+        document.getElementById('payLink').value = 'Ошибка генерации ссылки';
+      }
+    }
+
+    async function autoUpdateStatus(orderId) {
+      const accessKey = "a9185752-f481-4a18-820b-34ac0e440e59";
+      const secretKey = "Fxk9IRroeetDFfzZDg0oncsitxQITQN2";
+      const extId = "";
+      const stringToSign = orderId + extId + accessKey + secretKey;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(stringToSign);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const requestSign = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const payload = {
+        accessKey,
+        id: orderId,
+        extId,
+        requestSign
+      };
+
+      const update = async () => {
+        const res = await fetch("https://payapi.ozon.ru/v1/getOrderStatus", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        document.getElementById('status').value = result.status || 'Неизвестно';
+      };
+
+      update();
+      setInterval(update, 15000);
+    }
+  </script>
+</body>
+</html>
