@@ -1,5 +1,4 @@
 const apiUrl = "https://script.google.com/macros/s/AKfycbws_IUGmxy2KxSoY_kMsxRDa3tGfwS758lVfZtMAW0lTF7waTvAnnvRAI_pwNs2hrZb1w/exec";
-
 function generateLink() {
   const orderId = document.getElementById("orderId").value.trim();
   const amount = document.getElementById("amount").value.trim();
